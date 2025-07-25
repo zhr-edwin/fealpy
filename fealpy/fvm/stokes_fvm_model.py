@@ -1,7 +1,9 @@
 from typing import Union, Tuple
-from ..backend import backend_manager as bm
-from ..model import PDEModelManager, ComputationalModel
-from ..functionspace import ScaledMonomialSpace2d, TensorFunctionSpace
+from fealpy.backend import backend_manager as bm
+from fealpy.model import PDEModelManager, ComputationalModel
+from fealpy.functionspace import ScaledMonomialSpace2d, TensorFunctionSpace
+from fealpy.fem import BilinearForm, LinearForm
+from fealpy.solver import spsolve
 from ..fvm import (
     ScalarDiffusionIntegrator,
     ScalarSourceIntegrator,
@@ -9,8 +11,6 @@ from ..fvm import (
     GradientReconstruct,
     DirichletBC,
 )
-from ..fem import BilinearForm, LinearForm
-from ..solver import spsolve
 
 class StokesFVMModel(ComputationalModel):
     """
@@ -91,17 +91,18 @@ class StokesFVMModel(ComputationalModel):
         p_c = spsolve(C, div_u)
         return p_c
 
-    def solve(self, max_iter: int = 1000, tol: float = 1e-5):
+    def solve(self, max_iter: int = 1000, tol: float = 0.01):
         """Solve the Stokes equation using the SIMPLE algorithm."""
         p = bm.zeros(self.NC)
         A, u = self.temporary_velocity(p)
 
         for i in range(max_iter):
             p_c = self.pressure_correct(A, u)
-            Perror = bm.sqrt(bm.sum(self.cm * (p_c)**2))
+            Perror = bm.max(bm.abs(p_c))
             # self.logger.info(f"[Iter {i+1}] P_correct = {Perror:.4e}")
             if Perror < tol:
                 self.logger.info("Converged.")
+                self.logger.info(f"[Iter {i+1}] P_correct = {Perror:.4e}")
                 break
             p = p - p_c
             A, u = self.temporary_velocity(p)

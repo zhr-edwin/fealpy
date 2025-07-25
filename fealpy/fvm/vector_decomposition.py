@@ -1,6 +1,6 @@
-from ..backend import backend_manager as bm
-from ..typing import TensorLike
-from ..mesh import TriangleMesh
+from fealpy.backend import backend_manager as bm
+from fealpy.typing import TensorLike
+from fealpy.mesh import TriangleMesh
 
 class VectorDecomposition():
     def __init__(self, mesh: TriangleMesh):

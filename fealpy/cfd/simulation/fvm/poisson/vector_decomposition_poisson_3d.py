@@ -5,7 +5,7 @@ from fealpy.model import PDEModelManager
 from scipy.sparse.linalg import spsolve
 from scipy.sparse import coo_matrix
 
-pde = PDEModelManager('poisson').get_example('sinsinsin')
+pde = PDEModelManager('poisson').get_example(6)
 domain = pde.domain()
 mesh = TetrahedronMesh.from_box(domain, nx=16, ny=16, nz=16)
 cell2cell = mesh.cell_to_cell()

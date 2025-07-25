@@ -4,16 +4,16 @@ from scipy.sparse import spdiags, bmat
 import os
 
 from fealpy.decorator import barycentric
-from ..functionspace import LagrangeFESpace
-from ..fem import ScalarDiffusionIntegrator, VectorMassIntegrator
-from ..fem import VectorDiffusionIntegrator
-from ..fem import ScalarMassIntegrator, ScalarConvectionIntegrator
-from ..fem import VectorViscousWorkIntegrator, PressWorkIntegrator
-from ..fem import BilinearForm, MixedBilinearForm
-from ..fem import LinearForm
-from ..fem import VectorSourceIntegrator, ScalarSourceIntegrator
-from ..fem import VectorConvectionIntegrator, VectorEpsilonSourceIntegrator
-from ..fem import VectorBoundarySourceIntegrator, FluidBoundaryFrictionIntegrator
+from ...functionspace import LagrangeFESpace
+from ...fem import ScalarDiffusionIntegrator, VectorMassIntegrator
+from ...fem import VectorDiffusionIntegrator
+from ...fem import ScalarMassIntegrator, ScalarConvectionIntegrator
+from ...fem import VectorViscousWorkIntegrator, PressWorkIntegrator
+from ...fem import BilinearForm, MixedBilinearForm
+from ...fem import LinearForm
+from ...fem import VectorSourceIntegrator, ScalarSourceIntegrator
+from ...fem import VectorConvectionIntegrator, VectorEpsilonSourceIntegrator
+from ...fem import VectorBoundarySourceIntegrator, FluidBoundaryFrictionIntegrator
 
 class NSFEMSolver:
     def __init__(self, mesh, dt, uspace, pspace, rho=1.0, mu=1.0, q=5):

@@ -1,9 +1,9 @@
 from fealpy.backend import backend_manager as bm
-from ....fem import (ScalarMassIntegrator, ScalarConvectionIntegrator,PressWorkIntegrator,
+from fealpy.fem import (ScalarMassIntegrator, ScalarConvectionIntegrator,PressWorkIntegrator,
                      ViscousWorkIntegrator, SourceIntegrator, GradSourceIntegrator, 
                      ScalarDiffusionIntegrator)
-from ....fem import (BilinearForm, LinearForm, BlockForm, LinearBlockForm)
-from ....decorator import barycentric
+from fealpy.fem import (BilinearForm, LinearForm, BlockForm, LinearBlockForm)
+from fealpy.decorator import barycentric
 
 
 

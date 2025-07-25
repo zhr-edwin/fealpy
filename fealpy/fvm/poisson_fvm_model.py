@@ -1,18 +1,16 @@
 from typing import Union
-from ..backend import backend_manager as bm
-from ..model import PDEModelManager, ComputationalModel
-from ..functionspace import ScaledMonomialSpace2d
+from fealpy.backend import backend_manager as bm
+from fealpy.model import PDEModelManager, ComputationalModel
+from fealpy.functionspace import ScaledMonomialSpace2d
+from fealpy.fem import BilinearForm,LinearForm
+from fealpy.solver import spsolve
 from ..fvm import (
     ScalarDiffusionIntegrator,
     ScalarSourceIntegrator,
     ScalarCrossDiffusionIntegrator,
     DirichletBC,
 )
-from ..fem import (
-    BilinearForm,
-    LinearForm
-)
-from ..solver import spsolve
+
 
 class PoissonFVMModel(ComputationalModel):
     """

@@ -1,9 +1,8 @@
 from fealpy.backend import backend_manager as bm
-from fealpy.decorator import cartesian
+from fealpy.decorator import cartesian,variantmethod
 from typing import Union, Callable, Dict
 from fealpy.mesh import TriangleMesh
 import sympy as sp
-from fealpy.decorator import variantmethod
 
 
 CoefType = Union[int, float, Callable]

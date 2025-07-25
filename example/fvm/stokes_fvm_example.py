@@ -1,14 +1,13 @@
 import argparse
 from fealpy.backend import backend_manager as bm
-from fealpy.fvm import StokesFVMModel
 
 parser = argparse.ArgumentParser(description="FVM Stokes solver with SIMPLE algorithm")
 
 parser.add_argument('--pde', default=1, type=int,
                     help='PDE example ID from Stokes PDE manager')
 
-parser.add_argument('--nx', default=40, type=int, help='Number of cells in x')
-parser.add_argument('--ny', default=40, type=int, help='Number of cells in y')
+parser.add_argument('--nx', default=4, type=int, help='Number of cells in x')
+parser.add_argument('--ny', default=4, type=int, help='Number of cells in y')
 
 parser.add_argument('--space_degree', default=0, type=int,
                     help='Polynomial degree of ScaledMonomialSpace')
@@ -25,7 +24,7 @@ parser.add_argument('--log_level', default='INFO', type=str,
 parser.add_argument('--max_iter', default=1000, type=int,
                     help='Maximum number of SIMPLE iterations')
 
-parser.add_argument('--tol', default=1e-5, type=float,
+parser.add_argument('--tol', default=0.000001, type=float,
                     help='Convergence tolerance for pressure correction')
 
 parser.add_argument('--plot', action='store_true',
@@ -33,6 +32,7 @@ parser.add_argument('--plot', action='store_true',
 
 options = vars(parser.parse_args())
 bm.set_backend(options["backend"])
+from fealpy.fvm import StokesFVMModel
 
 model = StokesFVMModel(options)
 u, p = model.solve(max_iter=options["max_iter"], tol=options["tol"])
