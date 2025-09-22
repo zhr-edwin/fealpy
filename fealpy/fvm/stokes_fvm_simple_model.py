@@ -85,61 +85,14 @@ class StokesFVMSimpleModel(ComputationalModel):
         vap = A.diags().values
         return spsolve(A, f,"mumps"), vap
 
-    def initial_pressure_compute(self, f: TensorLike,) -> TensorLike:
-        """
-        Solve for pressure correction p' to enforce continuity.
-        """
-        pspace = ScaledMonomialSpace2d(self.pmesh, 0)
-        A = BilinearForm(pspace).add_integrator(ScalarDiffusionIntegrator(q=2)).assembly()
-        f = self.neumann_bc(f,self.pde.neumann_pressure)
-        LagA = self.pmesh.entity_measure('cell')
-        A1 = COOTensor(bm.array([bm.zeros(len(LagA), dtype=bm.int32),
-                             bm.arange(len(LagA), dtype=bm.int32)]), LagA, spshape=(1, len(LagA)))
-        A = BlockForm([[A, A1.T], [A1, None]])
-        A = A.assembly_sparse_matrix(format='csr')
-        b0 = bm.array([self.pde.pressure_integral_target()])
-        # b0 = bm.array([0])
-        b = bm.concatenate([f, b0], axis=0)
-        sol = spsolve(A, b,"mumps")
-        p_initial = sol[:-1] 
-        # p_initial -=bm.sum(p_initial*self.pmesh.entity_measure('cell'))
-        # p_initial += self.pde.pressure_integral_target()
-        # self.pI = self.pde.pressure(self.ppoints)
-        # err = bm.sqrt(bm.sum(self.cm *(self.pI-p_initial) ** 2)) 
-        # print(f"Initial pressure L2 error: {err:.2e}") 
-        import matplotlib.pyplot as plt
-        x, y = self.ppoints[:, 0], self.ppoints[:, 1]
-        self.pI = self.pde.pressure(self.ppoints)
-        fig = plt.figure(figsize=(12, 8))
-        for i, (data, title) in enumerate([ 
-            (p_initial, "Numerical p"),
-            (self.pI, "Exact p"),
-            (self.pI - p_initial, "Pressure Correction p'"),
-        ]):
-            ax = fig.add_subplot(2, 3, i+1, projection='3d')
-            ax.plot_trisurf(x, y, data, cmap='viridis')
-            ax.set_title(title)
-        plt.tight_layout()
-        plt.show()  
-        return p_initial
-
     def correct_pressure_compute(self, f: TensorLike, a_p_edge: TensorLike) -> TensorLike:
         """
         Solve for pressure correction p' to enforce continuity.
         """
         pspace = ScaledMonomialSpace2d(self.pmesh, 0)
         A = BilinearForm(pspace).add_integrator(
-            ScalarDiffusionIntegrator(q=2, coef=1 / a_p_edge)
+            ScalarDiffusionIntegrator(q=2,coef=1 / a_p_edge)
         ).assembly()  
-        # from fealpy.sparse import spdiags
-        # bd_edge = self.pmesh.boundary_face_index()
-        # e2c = self.pmesh.edge_to_cell()
-        # bd_integrator = bm.ones(bd_edge.shape[0])
-        # bde2c = e2c[bd_edge, 0]
-        # bdIdx = bdIdx = bm.zeros(A.shape[0])
-        # bm.add_at(bdIdx, bde2c, bd_integrator)
-        # B = spdiags(bdIdx, 0, A.shape[0], A.shape[1])
-        # A = A - B
         nbc = NeumannBC(self.pmesh, self.pde.neumann_pressure)
         f = nbc.DiffusionApply(f)
         LagA = self.pmesh.entity_measure('cell')
@@ -178,9 +131,9 @@ class StokesFVMSimpleModel(ComputationalModel):
         self.pgrad_ph = GradientReconstruct(self.pmesh).AverageGradientreNeumann(p,self.pde.neumann_pressure)
         self.pgrad_pI1 = GradientReconstruct(self.pmesh).AverageGradientreNeumann(self.pI,self.pde.neumann_pressure)
         self.pgrad_pI2 = self.pde.grad_pressure(self.ppoints)
-        print(bm.sqrt(bm.sum(self.pcm * (self.pgrad_ph[:,0] - self.pgrad_pI1[:,0])**2)))
-        print(bm.sqrt(bm.sum(self.pcm * (self.pgrad_ph[:,0] - self.pgrad_pI2[:,0])**2)))
-        print(bm.sqrt(bm.sum(self.pcm * (self.pgrad_pI1[:,0] - self.pgrad_pI2[:,0])**2)))
+        # print(bm.sqrt(bm.sum(self.pcm * (self.pgrad_ph[:,0] - self.pgrad_pI1[:,0])**2)))
+        # print(bm.sqrt(bm.sum(self.pcm * (self.pgrad_ph[:,0] - self.pgrad_pI2[:,0])**2)))
+        # print(bm.sqrt(bm.sum(self.pcm * (self.pgrad_pI1[:,0] - self.pgrad_pI2[:,0])**2)))
         self.uh, self.vh, self.ph = uh, vh, p
         self.p_correct = p_corr
         return uh, vh, p
@@ -195,26 +148,28 @@ class StokesFVMSimpleModel(ComputationalModel):
         ue = bm.sqrt(bm.sum(self.ucm * (self.uh - self.uI)**2))
         ve = bm.sqrt(bm.sum(self.vcm * (self.vh - self.vI)**2))
         pe0 = bm.sqrt(bm.sum(self.pcm * (self.ph - self.pI)**2))
-        # pe = self.ph - self.pI
         return ue, ve, pe0
 
     def plot(self) -> None:
-        """Plot numerical and exact solutions for u1, u2, and p."""
         import matplotlib.pyplot as plt
-        x, y = self.ppoints[:, 0], self.ppoints[:, 1]
+        fig = plt.figure(figsize=(15, 5))
 
-        fig = plt.figure(figsize=(12, 8))
-        for i, (data, title) in enumerate([
-            # (self.uI-self.uh, "Error u"),
-            # (self.vI-self.vh, "Error v"),
-            (self.pI-self.ph, "Error p"),
-            # (self.pgrad_ph[:,0] - self.pgrad_pI1[:,0], "Pressure Gradient px'"),
-            # (self.pgrad_ph[:,1] - self.pgrad_pI1[:,1], "Pressure Gradient py'"),
-            
-        ]):
-            ax = fig.add_subplot(2, 3, i+1, projection='3d')
-            ax.plot_trisurf(x, y, data, cmap='viridis')
-            ax.set_title(title)
+        px, py = self.pmesh.entity_barycenter("cell").T
+        ux, uy = self.umesh.entity_barycenter("cell").T
+        vx, vy = self.vmesh.entity_barycenter("cell").T
+
+        ax1 = fig.add_subplot(1, 3, 1, projection="3d")
+        ax1.plot_trisurf(px, py, self.ph-self.pI, cmap="viridis")
+        ax1.set_title("Pressure")
+
+        ax2 = fig.add_subplot(1, 3, 2, projection="3d")
+        ax2.plot_trisurf(ux, uy, self.uh-self.uI, cmap="viridis")
+        ax2.set_title("U velocity")
+
+        ax3 = fig.add_subplot(1, 3, 3, projection="3d")
+        ax3.plot_trisurf(vx, vy, self.vh-self.vI, cmap="viridis")
+        ax3.set_title("V velocity")
+
         plt.tight_layout()
         plt.show()
 

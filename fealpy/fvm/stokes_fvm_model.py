@@ -61,15 +61,14 @@ class StokesFVMModel(ComputationalModel):
         bform = BilinearForm(self.velocity_space)
         bform.add_integrator(ScalarDiffusionIntegrator(q=self.p + 2))
         B = bform.assembly()
-
+        A = B.diags().values
         lform = LinearForm(self.velocity_space)
         lform.add_integrator(ScalarSourceIntegrator(self.pde.source, q=self.p + 2))
         f = lform.assembly()
 
         dbc = DirichletBC(self.mesh, self.pde.dirichlet_velocity)
         B, f = dbc.DiffusionApply(B, f)
-        A = B.diags()
-
+        
         grad_p = GradientReconstruct(self.mesh).AverageGradientreNeumann(p, self.pde.neumann_pressure)  # (NC, 2)
         px = bm.transpose(grad_p).flatten()
         pin = bm.einsum('i,i->i', px, self.cmv)
@@ -91,7 +90,7 @@ class StokesFVMModel(ComputationalModel):
         uf = bm.reshape(uf, (-1, 2))
         return uf
     
-    def pressure_correct(self, A: TensorLike, uf: TensorLike) -> TensorLike:
+    def pressure_correct(self, ap: TensorLike, uf: TensorLike) -> TensorLike:
         """Solve for pressure correction p' to enforce continuity."""
         div_u = DivergenceReconstruct(self.mesh).Reconstruct(uf)  # (NE,)
         
@@ -99,6 +98,7 @@ class StokesFVMModel(ComputationalModel):
         bform2.add_integrator(ScalarDiffusionIntegrator(q=2))
         A = bform2.assembly()
         LagA = self.mesh.entity_measure('cell')
+        div_u = ap[:len(LagA)]*div_u
         A1 = COOTensor(bm.array([bm.zeros(len(LagA), dtype=bm.int32),
                              bm.arange(len(LagA), dtype=bm.int32)]), LagA, spshape=(1, len(LagA)))
         A = BlockForm([[A, A1.T], [A1, None]])

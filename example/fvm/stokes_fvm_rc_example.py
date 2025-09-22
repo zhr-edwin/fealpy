@@ -31,6 +31,7 @@ def main():
 
     model.solve_rhie_chow()
     uerr, verr, perr = model.compute_error()
+    model.plot()
     print(f"L2 error (u) = {uerr:.4e}")
     print(f"L2 error (v) = {verr:.4e}")
     print(f"L2 error (p) = {perr:.4e}")
