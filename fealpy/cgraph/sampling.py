@@ -9,7 +9,7 @@ class Sample(CNodeType):
 
     Inputs:
         domain (list | tensor): A sequence defining the rectangular domain, e.g., [x_min, x_max, y_min, y_max].
-        mode (str): Sampling method. Either 'random' or 'linspace'. Defaults to 'random'.
+        mode (str): Sampling method. Either 'random' or 'linspace'. Defaults to 'linspace'.
         n (int): Controls the number of samples. The exact count depends on 'mode' and 'boundary':
             If the mode='linspace', the total number of samples is n^d if boundary=False or n*d if boundary=True
             If the mode='random', the total number of samples is n if boundary=False or n*d if boundary=True.
@@ -28,7 +28,7 @@ class Sample(CNodeType):
 
     INPUT_SLOTS = [
         PortConf("domain", DataType.NONE, ttype=1, desc="区域由 PDE 提供", title="计算区域", default=[0,1,0,1]),
-        PortConf("mode", DataType.MENU, ttype=0, title="采样模式", default="random", items=["random", "linspace"]),
+        PortConf("mode", DataType.MENU, ttype=0, title="采样模式", default="linspace", items=["random", "linspace"]),
         PortConf("n", DataType.INT, ttype=0, title="分段数", default=10, min_val=1),
         PortConf("boundary", DataType.BOOL, ttype=0, title="是否是在边界采样", default=False),
     ]
