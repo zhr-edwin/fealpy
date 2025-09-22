@@ -17,6 +17,7 @@ def plot_2d(mesh):
     fig = plt.figure()
     axes = fig.gca()
     mesh.add_plot(axes)
+    # mesh.add_plot(axes, showaxis=True)
     # mesh.find_node(axes, showindex=True)
     # mesh.find_edge(axes, showindex=True)
     # mesh.find_cell(axes, showindex=True)
@@ -96,9 +97,11 @@ class TestMesh:
             
     @pytest.mark.parametrize("mesh_type", ["triangle"])
     def test_circle(self, mesh_type):
+        X, Y = 1.2, 1.0
+        radius = 2.0
         h = 0.5
         MeshClass = get_mesh_class(mesh_type)
-        mesh = CircleMesh.run(mesh_type, h)
+        mesh = CircleMesh.run(mesh_type, X, Y, radius, h)
         
         assert isinstance(mesh, MeshClass)
         assert hasattr(mesh, "node")

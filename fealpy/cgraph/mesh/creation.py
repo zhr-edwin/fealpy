@@ -188,18 +188,25 @@ class CircleMesh(CNodeType):
     INPUT_SLOTS = [
         PortConf("mesh_type", DataType.MENU, 0, title="网格类型", default="triangle"),
         PortConf("domain", DataType.NONE, title="区域"),
-        # PortConf("X", DataType.FLOAT, title="圆心X坐标"),
-        # PortConf("Y", DataType.FLOAT, title="圆心Y坐标"),
-        # PortConf("radius", DataType.FLOAT, title="圆半径"),
-        PortConf("h", DataType.FLOAT, title="网格密度参数")
+        PortConf("X", DataType.FLOAT, title="圆心X坐标"),
+        PortConf("Y", DataType.FLOAT, title="圆心Y坐标"),
+        PortConf("radius", DataType.FLOAT, title="圆半径"),
+        PortConf("h", DataType.FLOAT, title="网格密度")
     ]
     OUTPUT_SLOTS = [
         PortConf("mesh", DataType.MESH, title="网格")
     ]
 
     @staticmethod
-    def run(mesh_type, h):
+    def run(mesh_type, X, Y, radius, h):
         MeshClass = get_mesh_class(mesh_type)
-        # kwds = {"X": X, "Y": Y, "radius": radius, "h": h}
+    
         kwds = {"h": h}
-        return MeshClass.from_unit_circle_gmsh(**kwds)
+        mesh = MeshClass.from_unit_circle_gmsh(**kwds)
+        node = mesh.entity('node')
+
+        new_node = radius * node
+        new_node[:,0] = new_node[:, 0] + X
+        new_node[:,1] = new_node[:, 1] + Y
+        mesh.node = new_node
+        return mesh
