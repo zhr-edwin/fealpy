@@ -99,3 +99,58 @@ class DLDMicrofluidicChipMesh2d(CNodeType):
 
         return (mesher.mesh, mesher.radius, mesher.centers, mesher.inlet_boundary, 
                 mesher.outlet_boundary, mesher.wall_boundary)
+
+
+class SphereSurface(CNodeType):
+    r"""Create a mesh on the surface of a unit sphere.
+
+    Inputs:
+        mesh_type (str): Type of mesh to granerate.
+        refine (int): Number of mesh refine times.
+
+    Outputs:
+        mesh (MeshType): The mesh object created.
+    """
+    TITLE: str = "球面网格"
+    PATH: str = "网格.构造"
+    DESC: str = "生成单位球面上的网格，输出网格类型与网格加密次数，加密次数越大，网格越密。"
+    INPUT_SLOTS = [
+        PortConf("mesh_type", DataType.MENU, 0, default="triangle", items=["triangle", "quadrangle"]),
+        PortConf("refine", DataType.INT, 0, default=2, min_val=1),
+    ]
+    OUTPUT_SLOTS = [
+        PortConf("mesh", DataType.MESH)
+    ]
+
+    @staticmethod
+    def run(mesh_type, refine):
+        MeshClass = get_mesh_class(mesh_type)
+        kwds = {"refine": refine}
+        return MeshClass.from_unit_sphere_surface(**kwds)
+    
+class Sphere(CNodeType):
+    r"""Create a mesh of a unit sphere.
+
+    Inputs:
+        mesh_type (str): Type of mesh to granerate.
+        h (float): The mesh density, the smaller the h, the denser the grid.
+
+    Outputs:
+        mesh (MeshType): The mesh object created.
+    """
+    TITLE: str = "球体网格"
+    PATH: str = "网格.构造"
+    DESC: str = "生成单位球体的网格，输入网格类型和网格密度h。h一般为大于0小于1的浮点数，h越小，网格越密。"
+    INPUT_SLOTS = [
+        PortConf("mesh_type", DataType.MENU, 0, default="tetrahedron", items=["tetrahedron"]),
+        PortConf("h", DataType.FLOAT, 0, default=0.5, min_val=0.1),
+    ]
+    OUTPUT_SLOTS = [
+        PortConf("mesh", DataType.MESH)
+    ]
+
+    @staticmethod
+    def run(mesh_type, h):
+        MeshClass = get_mesh_class(mesh_type)
+        kwds = {"h": h}
+        return MeshClass.from_unit_sphere_gmsh(**kwds)
