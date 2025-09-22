@@ -45,28 +45,28 @@ class Box2d(CNodeType):
 
 class DLDMicrofluidicChipMesh2d(CNodeType):
     
-    TITLE: str = "DLD Microfluidic Chip Mesh 2D"
-    PATH: str = "mesh.creation"
+    TITLE: str = "二维 DLD 微流芯片网格"
+    PATH: str = "网格.构造"
     INPUT_SLOTS = [
-        PortConf("init_point", DataType.FLOAT, 0, default=(0.0,0.0)),
-        PortConf("chip_height", DataType.FLOAT, 0, default=1.0),
-        PortConf("inlet_length", DataType.FLOAT, 0, default=0.1),
-        PortConf("outlet_length", DataType.FLOAT, 0, default=0.1),
-        PortConf("radius", DataType.FLOAT, 0, default=1 / (3 * 4 * 3)),
-        PortConf("n_rows", DataType.INT, 0, default=8),
-        PortConf("n_cols", DataType.INT, 0, default=4),
-        PortConf("tan_angle", DataType.FLOAT, 0, default=1/7),
-        PortConf("n_stages", DataType.INT, 0, default=3),
-        PortConf("stage_length", DataType.FLOAT, 0, default=1.4),
-        PortConf("lc", DataType.FLOAT, 0, default=0.02)
+        PortConf("init_point", DataType.FLOAT, 0, default=(0.0,0.0), title="初始点"),
+        PortConf("chip_height", DataType.FLOAT, 0, default=1.0, title="芯片高度"),
+        PortConf("inlet_length", DataType.FLOAT, 0, default=0.1, title="入口宽度"),
+        PortConf("outlet_length", DataType.FLOAT, 0, default=0.1, title="出口宽度"),
+        PortConf("radius", DataType.FLOAT, 0, default=1 / (3 * 4 * 3), title="微柱半径"),
+        PortConf("n_rows", DataType.INT, 0, default=8, title="行数"),
+        PortConf("n_cols", DataType.INT, 0, default=4, title="列数"),
+        PortConf("tan_angle", DataType.FLOAT, 0, default=1/7, title="偏转角正切值"),
+        PortConf("n_stages", DataType.INT, 0, default=3, title="微柱阵列周期数"),
+        PortConf("stage_length", DataType.FLOAT, 0, default=1.4, title="单周期长度"),
+        PortConf("lc", DataType.FLOAT, 0, default=0.02, title="网格尺寸")
     ]
     OUTPUT_SLOTS = [
-        PortConf("mesh", DataType.MESH),
-        PortConf("radius", DataType.FLOAT),
-        PortConf("centers", DataType.FLOAT),
-        PortConf("inlet_boundary", DataType.TENSOR),
-        PortConf("outlet_boundary", DataType.TENSOR),
-        PortConf("wall_boundary", DataType.TENSOR)
+        PortConf("mesh", DataType.MESH, title="网格"),
+        PortConf("radius", DataType.FLOAT, title="微柱半径"),
+        PortConf("centers", DataType.FLOAT, title="微柱圆心坐标"),
+        PortConf("inlet_boundary", DataType.TENSOR, title="入口边界"),
+        PortConf("outlet_boundary", DataType.TENSOR, title="出口边界"),
+        PortConf("wall_boundary", DataType.TENSOR, title="通道壁面边界")
     ]
 
     @staticmethod

@@ -13,7 +13,7 @@ solver = cgraph.create("CGSolver")
 postprocess = cgraph.create("VPDecoupling")
 
 mesher(lc = 0.02)
-uspacer(mesh = mesher(), p=2, gd = 2, value_dim = -1)
+uspacer(mesh = mesher(), p=2, gd = 2)
 pspacer(mesh = mesher(), p=1)
 pde(radius = mesher().radius,
     centers = mesher().centers,
@@ -32,7 +32,7 @@ postprocess(out = solver().out,
             uspace = uspacer())
 
 # 最终连接到图输出节点上
-WORLD_GRAPH.output_node(uh = postprocess().uh, ph = postprocess().ph)
+WORLD_GRAPH.output(uh = postprocess().uh, ph = postprocess().ph)
 WORLD_GRAPH.error_listeners.append(print)
 WORLD_GRAPH.execute()
 print(WORLD_GRAPH.get())
