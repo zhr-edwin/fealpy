@@ -22,7 +22,7 @@ class Box2d(CNodeType):
     Outputs:
         mesh (MeshType): The mesh object created.
     """
-    TITLE: str = "二维 Box 网格"
+    TITLE: str = "矩形网格"
     PATH: str = "网格.构造"
     INPUT_SLOTS = [
         PortConf("mesh_type", DataType.MENU, 0, title="网格类型", default="triangle", items=["triangle", "quadrangle"]),
@@ -41,7 +41,7 @@ class Box2d(CNodeType):
         if domain is not None:
             kwds["box"] = domain
         return MeshClass.from_box(**kwds)
-    
+
 
 class DLDMicrofluidicChipMesh2d(CNodeType):
     r"""Create a mesh in a DLD microfluidic chip-shaped 2D area.
@@ -122,7 +122,120 @@ class DLDMicrofluidicChipMesh2d(CNodeType):
 
         return (mesher.mesh, mesher.radius, mesher.centers, mesher.inlet_boundary, 
                 mesher.outlet_boundary, mesher.wall_boundary)
+
+
+class CreateMesh(CNodeType):
+    r"""Create a mesh object.This node generates a mesh of the specified type 
+    using given node and cell data.
+
+    Inputs:
+        mesh_type (str): Type of mesh to granerate.
+        Supported values: "triangle", "quadrangle", "tetrahedron", "hexahedron".Default is "edgemesh".
+        
+        domain (tuple[float, float], optional): Domain.
+        node(tensor):Coordinates of mesh nodes.
+        cell(tensor):Connectivity of mesh cells.
+
+    Outputs:
+        mesh (MeshType): The mesh object created.
+    """
+    TITLE: str = "构造网格"
+    PATH: str = "网格.构造"
+    INPUT_SLOTS = [
+        PortConf("mesh_type", DataType.MENU, 0, title="网格类型", default="triangle", 
+                 items=["triangle", "quadrangle", "tetrahedron", "hexahedron", "edge"]),
+        PortConf("domain", DataType.NONE, title="区域"),
+        PortConf("node", DataType.TENSOR, title="节点坐标"),
+        PortConf("cell", DataType.TENSOR, title="单元")
+    ]
+    OUTPUT_SLOTS = [
+        PortConf("mesh", DataType.MESH, title="网格")
+    ]
+
+    @staticmethod
+    def run(mesh_type, node, cell):
+        MeshClass = get_mesh_class(mesh_type)
+        kwds = {"node": node, "cell": cell}
+        return MeshClass(**kwds)
+
+
+class Box3d(CNodeType):
+    r"""Create a mesh in a box-shaped 3D area.
+
+    Inputs:
+        mesh_type (str): Type of mesh to granerate.
+        domain (tuple[float, float, float, float, float, float], optional): Domain.
+        nx (int, optional): Segments on x direction.
+        ny (int, optional): Segments on y direction.
+        nz (int, optional): Segments on z direction.
+
+    Outputs:
+        mesh (MeshType): The mesh object created.
+    """
+    TITLE: str = "长方体网格"
+    PATH: str = "网格.构造"
+    INPUT_SLOTS = [
+        PortConf("mesh_type", DataType.MENU, 0, title="网格类型", default="tetrahedron", items=["tetrahedron", "hexahedron"]),
+        PortConf("domain", DataType.NONE, title="区域"),
+        PortConf("nx", DataType.INT, title="X 分段数", default=10, min_val=1),
+        PortConf("ny", DataType.INT, title="Y 分段数", default=10, min_val=1),
+        PortConf("nz", DataType.INT, title="Z 分段数", default=10, min_val=1)
+    ]
+    OUTPUT_SLOTS = [
+        PortConf("mesh", DataType.MESH, title="网格")
+    ]
+
+    @staticmethod
+    def run(mesh_type, domain, nx, ny, nz):
+        MeshClass = get_mesh_class(mesh_type)
+        kwds = {"nx": nx, "ny": ny, "nz": nz}
+        if domain is not None:
+            kwds["box"] = domain
+        return MeshClass.from_box(**kwds)    
+
+
+class CircleMesh(CNodeType):
+    r"""Generate a triangular mesh within a 2D circular domain.
+
+    Inputs:
+        X (float): X-coordinate of the circle center.
+        Y (float): Y-coordinate of the circle center.
+        radius (float): Radius of the circle.
+        h (float): Mesh density parameter. Smaller values produce finer meshes.
+
+    Outputs:
+        mesh (MeshType): The mesh object created.
+    """
+    TITLE: str = "二维圆形网格" 
+    PATH: str = "网格.构造"
+    INPUT_SLOTS = [
+        PortConf("mesh_type", DataType.MENU, 0, title="网格类型", default="triangle", items=["triangle"]),
+        PortConf("domain", DataType.NONE, title="区域"),
+        PortConf("X", DataType.FLOAT, title="圆心X坐标"),
+        PortConf("Y", DataType.FLOAT, title="圆心Y坐标"),
+        PortConf("radius", DataType.FLOAT, title="圆半径"),
+        PortConf("h", DataType.FLOAT, title="网格密度")
+    ]
+    OUTPUT_SLOTS = [
+        PortConf("mesh", DataType.MESH, title="网格")
+    ]
+
+    @staticmethod
+    def run(mesh_type, X, Y, radius, h):
+        MeshClass = get_mesh_class(mesh_type)
     
+        kwds = {"h": h}
+        mesh = MeshClass.from_unit_circle_gmsh(**kwds)
+        node = mesh.entity('node')
+
+        new_node = radius * node
+        new_node[:,0] = new_node[:, 0] + X
+        new_node[:,1] = new_node[:, 1] + Y
+        mesh.node = new_node
+
+        return mesh
+
+
 class Cylinder3d(CNodeType):
     r"""Create a mesh in a cylinder-shaped 3D area.
 
