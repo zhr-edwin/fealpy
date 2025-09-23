@@ -20,7 +20,4 @@ class VPDecoupling(CNodeType):
         uh = out[:ugdof]
         ph = out[ugdof:]
 
-        # uspace.mesh.nodedata['ph'] = ph
-        # uspace.mesh.nodedata['uh'] = uh.reshape(2,-1).T
-        # uspace.mesh.to_vtk('dld_chip910.vtu')
         return uh ,ph
