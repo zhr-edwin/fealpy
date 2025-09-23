@@ -84,6 +84,7 @@ class DLDMicrofluidicChipMesh2d(CNodeType):
         n_stages (int, optional): Number of periods of micropillar arrays.
         stage_length (float, optional): Length of a single period.
         lc (float, optional): Target mesh size.
+
     Outputs:
         mesh (MeshType): The mesh object created.
         radius (float): Radius of the micropillars.
@@ -92,22 +93,21 @@ class DLDMicrofluidicChipMesh2d(CNodeType):
         outlet_boundary (ndarray): Outlet boundary.
         wall_boundary (ndarray): Wall boundary of the channel.
     """
-    
     TITLE: str = "二维 DLD 微流芯片网格"
     PATH: str = "网格.构造"
     INPUT_SLOTS = [
-        PortConf("init_point_x", DataType.FLOAT, 0, default=0.0, title="初始点 X"),
-        PortConf("init_point_y", DataType.FLOAT, 0, default=0.0, title="初始点 Y"),
-        PortConf("chip_height", DataType.FLOAT, 0, default=1.0, title="芯片高度"),
-        PortConf("inlet_length", DataType.FLOAT, 0, default=0.1, title="入口宽度"),
-        PortConf("outlet_length", DataType.FLOAT, 0, default=0.1, title="出口宽度"),
-        PortConf("radius", DataType.FLOAT, 0, default=1 / (3 * 4 * 3), title="微柱半径"),
-        PortConf("n_rows", DataType.INT, 0, default=8, title="行数"),
-        PortConf("n_cols", DataType.INT, 0, default=4, title="列数"),
-        PortConf("tan_angle", DataType.FLOAT, 0, default=1/7, title="偏转角正切值"),
-        PortConf("n_stages", DataType.INT, 0, default=3, title="微柱阵列周期数"),
-        PortConf("stage_length", DataType.FLOAT, 0, default=1.4, title="单周期长度"),
-        PortConf("lc", DataType.FLOAT, 0, default=0.02, title="网格尺寸")
+        PortConf("init_point_x", DataType.FLOAT, 1, default=0.0, title="初始点 X"),
+        PortConf("init_point_y", DataType.FLOAT, 1, default=0.0, title="初始点 Y"),
+        PortConf("chip_height", DataType.FLOAT, 1, default=1.0, title="芯片高度"),
+        PortConf("inlet_length", DataType.FLOAT, 1, default=0.1, title="入口宽度"),
+        PortConf("outlet_length", DataType.FLOAT, 1, default=0.1, title="出口宽度"),
+        PortConf("radius", DataType.FLOAT, 1, default=1 / (3 * 4 * 3), title="微柱半径"),
+        PortConf("n_rows", DataType.INT, 1, default=8, title="行数"),
+        PortConf("n_cols", DataType.INT, 1, default=4, title="列数"),
+        PortConf("tan_angle", DataType.FLOAT, 1, default=1/7, title="偏转角正切值"),
+        PortConf("n_stages", DataType.INT, 1, default=3, title="微柱阵列周期数"),
+        PortConf("stage_length", DataType.FLOAT, 1, default=1.4, title="单周期长度"),
+        PortConf("lc", DataType.FLOAT, 1, default=0.02, title="网格尺寸")
     ]
     OUTPUT_SLOTS = [
         PortConf("mesh", DataType.MESH, title="网格"),
@@ -149,6 +149,62 @@ class DLDMicrofluidicChipMesh2d(CNodeType):
                 mesher.outlet_boundary, mesher.wall_boundary)
 
 
+class SphereSurface(CNodeType):
+    r"""Create a mesh on the surface of a unit sphere.
+
+    Inputs:
+        mesh_type (str): Type of mesh to granerate.
+        refine (int): Number of mesh refine times.
+
+    Outputs:
+        mesh (MeshType): The mesh object created.
+    """
+    TITLE: str = "球面网格"
+    PATH: str = "网格.构造"
+    DESC: str = "生成单位球面上的网格，输出网格类型与网格加密次数，加密次数越大，网格越密。"
+    INPUT_SLOTS = [
+        PortConf("mesh_type", DataType.MENU, 0, title="网格类型", default="triangle", items=["triangle", "quadrangle"]),
+        PortConf("refine", DataType.INT, 1, title="加密", default=2, min_val=1),
+    ]
+    OUTPUT_SLOTS = [
+        PortConf("mesh", DataType.MESH, title="网格")
+    ]
+
+    @staticmethod
+    def run(mesh_type, refine):
+        MeshClass = get_mesh_class(mesh_type)
+        kwds = {"refine": refine}
+        return MeshClass.from_unit_sphere_surface(**kwds)
+
+
+class Sphere(CNodeType):
+    r"""Create a mesh of a unit sphere.
+
+    Inputs:
+        mesh_type (str): Type of mesh to granerate.
+        h (float): The mesh density, the smaller the h, the denser the grid.
+
+    Outputs:
+        mesh (MeshType): The mesh object created.
+    """
+    TITLE: str = "球体网格"
+    PATH: str = "网格.构造"
+    DESC: str = "生成单位球体的网格，输入网格类型和网格密度h。h一般为大于0小于1的浮点数，h越小，网格越密。"
+    INPUT_SLOTS = [
+        PortConf("mesh_type", DataType.MENU, 0, title="网格类型", default="tetrahedron", items=["tetrahedron"]),
+        PortConf("h", DataType.FLOAT, 1, title="密度", default=0.5, min_val=0.1),
+    ]
+    OUTPUT_SLOTS = [
+        PortConf("mesh", DataType.MESH, title="网格")
+    ]
+
+    @staticmethod
+    def run(mesh_type, h):
+        MeshClass = get_mesh_class(mesh_type)
+        kwds = {"h": h}
+        return MeshClass.from_unit_sphere_gmsh(**kwds)
+
+
 class CreateMesh(CNodeType):
     r"""Create a mesh object.This node generates a mesh of the specified type 
     using given node and cell data.
@@ -169,9 +225,8 @@ class CreateMesh(CNodeType):
     INPUT_SLOTS = [
         PortConf("mesh_type", DataType.MENU, 0, title="网格类型", default="triangle", 
                  items=["triangle", "quadrangle", "tetrahedron", "hexahedron", "edge"]),
-        PortConf("domain", DataType.NONE, title="区域"),
-        PortConf("node", DataType.TENSOR, title="节点坐标"),
-        PortConf("cell", DataType.TENSOR, title="单元")
+        PortConf("node", DataType.TENSOR, 1, title="节点坐标"),
+        PortConf("cell", DataType.TENSOR, 1, title="单元")
     ]
     OUTPUT_SLOTS = [
         PortConf("mesh", DataType.MESH, title="网格")
@@ -231,6 +286,7 @@ class CircleMesh(CNodeType):
     Outputs:
         mesh (MeshType): The mesh object created.
     """
+
     TITLE: str = "二维圆形网格" 
     PATH: str = "网格.构造"
     INPUT_SLOTS = [
@@ -275,9 +331,9 @@ class Cylinder3d(CNodeType):
     PATH: str = "网格.构造"
     INPUT_SLOTS = [
         PortConf("mesh_type", DataType.MENU, 0, title="网格类型", default="tetrahedron", items=["tetrahedron"]),
-        PortConf("radius", DataType.FLOAT, 0, title="圆柱体半径", default=1.0, min_val=1e-6),
-        PortConf("height", DataType.FLOAT, 0, title="圆柱体高度", default=2.0, min_val=1e-6),
-        PortConf("lc", DataType.FLOAT, 0, title="网格尺寸", default=0.2, min_val=1e-6)
+        PortConf("radius", DataType.FLOAT, 1, title="圆柱体半径", default=1.0, min_val=1e-6),
+        PortConf("height", DataType.FLOAT, 1, title="圆柱体高度", default=2.0, min_val=1e-6),
+        PortConf("lc", DataType.FLOAT, 1, title="网格尺寸", default=0.2, min_val=1e-6)
     ]
     OUTPUT_SLOTS = [
         PortConf("mesh", DataType.MESH, title="网格"),
