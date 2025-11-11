@@ -5,8 +5,6 @@ from fealpy.typing import TensorLike
 from fealpy.backend import backend_manager as bm
 from fealpy.material.elastic_material import LinearElasticMaterial
 
-from ..model.beam.timobeam_axle_data_3d import TimobeamAxleData3D
-
 
 class AxleMaterial(LinearElasticMaterial):
     """Material properties for 3D axles.
@@ -32,8 +30,6 @@ class AxleMaterial(LinearElasticMaterial):
         self.E = self.get_property('elastic_modulus')
         self.nu = self.get_property('poisson_ratio')
         self.mu = self.get_property('shear_modulus')
-        
-        model = TimobeamAxleData3D()
         
     def __str__(self) -> str:
         s = f"{self.__class__.__name__}(\n"
@@ -75,29 +71,3 @@ class AxleMaterial(LinearElasticMaterial):
                       [0, 0, E]], dtype=bm.float64)
     
         return D
-    
-    def calculate_strain_and_stress(self,
-                    uh: TensorLike,
-                    x: float,
-                    y: float,
-                    z: float,
-                    l: float) -> Tuple[TensorLike, TensorLike]:
-        """Calculate the strain and stress.
-                    ε = B * u_e
-                    σ = D * ε
-                    
-        Parameters:
-            uh (TensorLike): Nodal displacement vector.
-            x (float): Local coordinate in the axle cross-section along the x-axis.
-            y (float): Local coordinate in the axle cross-section along the y-axis.
-            z (float): Local coordinate in the axle cross-section along the z-axis.
-            l (float): Length of the beam element.
-            
-        Returns:
-            Tuple[TensorLike, TensorLike]: Strain and stress vectors.
-        """
-        L = self.linear_basis(x, l)
-        
-        strain = L @ uh
-        stress = self.stress_matrix() @ strain
-        return strain, stress
